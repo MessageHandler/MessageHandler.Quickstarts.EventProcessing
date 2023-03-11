@@ -8,7 +8,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddLogging();
 
         var storageConnectionString = hostContext.Configuration.GetValue<string>("azurestoragedata")
-                                  ?? throw new Exception("No 'TableStorageConnectionString' was provided. Use User Secrets or specify via environment variable.");
+                                  ?? throw new Exception("No 'azurestoragedata' was provided. Use User Secrets or specify via environment variable.");
 
 
         var eventhubsnamespace = hostContext.Configuration.GetValue<string>("eventhubsnamespace")
@@ -19,25 +19,29 @@ IHost host = Host.CreateDefaultBuilder(args)
             runtimeConfiguration.StreamProcessingPipeline(streaming =>
             {
                 streaming
-                    .PullMessagesFrom(from => from.EventHub("largehub", "$Default", eventhubsnamespace, storageConnectionString, "leases"))                    
+                    .PullMessagesFrom(from => from.EventHub("receivehub", "$Default", eventhubsnamespace, storageConnectionString, "leases"))
                     .DeserializeMessagesWith(new JSonMessageSerializer())
                     .EnableReactiveProcessing(processing =>
                     {
-                        processing.InterpretMessagesUsing<AverageByDevice>();
-                       // processing.RespondUsing<MyActionLogic>();
-                        processing.CompleteBatchesWith<MyCompletionLogic>();
+                        processing.InterpretMessagesUsing<AverageSensorValuesByDevice>();
+                        processing.CompleteBatchesWith<DispatchAveragedSensorValues>();
+                    })
+                    .EnableBufferedDispatching(dispatching =>
+                    {
+                        dispatching.SerializeMessagesWith(new JSonMessageSerializer());
+                        dispatching.RouteMessages(to => to.EventHub("sendhub", eventhubsnamespace));
                     });
             });
 
             runtimeConfiguration.BufferedDispatchingPipeline(dispatching =>
             {
                 dispatching.SerializeMessagesWith(new JSonMessageSerializer());
-                dispatching.RouteMessages(to => to.EventHub("largehub", eventhubsnamespace));
+                dispatching.RouteMessages(to => to.EventHub("receivehub", eventhubsnamespace));
             });
         });
 
         services.AddHostedService<EmulateEventGenerator>();
-     
+
     })
     .Build();
 

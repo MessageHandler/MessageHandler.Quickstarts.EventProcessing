@@ -2,18 +2,18 @@
 
 namespace Worker
 {
-    public class MyCompletionLogic : ICompleteBatches
+    public class DispatchAveragedSensorValues : ICompleteBatches
     {
         private readonly IDispatchMessages _dispatcher;
 
-        public MyCompletionLogic(IDispatchMessages dispatcher)
+        public DispatchAveragedSensorValues(IDispatchMessages dispatcher)
         {
             _dispatcher = dispatcher;
         }
 
         public async Task Complete(IProcessingContext context)
         {
-           // await _dispatcher.Dispatch(new[] { new { MyId = Guid.NewGuid() } });
+            await _dispatcher.Dispatch(new[] { context.Message });
         }
     }
 }
