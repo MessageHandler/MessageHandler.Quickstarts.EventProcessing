@@ -24,6 +24,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                     .EnableReactiveProcessing(processing =>
                     {
                         processing.InterpretMessagesUsing<AverageSensorValuesByDevice>();
+                        processing.RespondUsing<ShowAverageSensorValue>();
                         processing.CompleteBatchesWith<DispatchAveragedSensorValues>();
                     })
                     .EnableBufferedDispatching(dispatching =>

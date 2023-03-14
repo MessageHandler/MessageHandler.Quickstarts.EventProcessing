@@ -1,7 +1,7 @@
 ﻿using System.Reactive.Linq;
 using MessageHandler.Runtime.StreamProcessing;
 using System.Text.Json;
-using Contract; 
+using Contract;
 
 namespace Worker
 {
@@ -16,11 +16,11 @@ namespace Worker
                 from b in p.Buffer(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10))
                 select new ActionableContext(b.Select(bf => bf.Processing).FirstOrDefault())
                 {
-                    Message = new
+                    Message = b.Count() > 0 ? new
                     {
                         Count = b.Count(),
                         Average = b.Average(m => m.Message.Value)
-                    }
+                    } : null
                 };
             return query;
         }
