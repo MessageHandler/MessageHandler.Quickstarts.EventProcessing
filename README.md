@@ -14,6 +14,10 @@ Event processing converts streams of events into new events.
 
 Use event processing to filter, count, group, join or window event streams and react to the result.
 
+## Scenario
+
+In this scenario the event processor will inspect the SensorValueChanged events (emitted by the event generator) and computes the average value over a time period of 10 seconds.
+
 ## What you need to get started
 
 - The [.NET 6 SDK](https://dotnet.microsoft.com/en-us/download) should be installed
