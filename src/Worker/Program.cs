@@ -1,6 +1,7 @@
 using Worker;
 using MessageHandler.Runtime;
 using MessageHandler.Runtime.StreamProcessing;
+using Contract;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
@@ -20,7 +21,7 @@ IHost host = Host.CreateDefaultBuilder(args)
             {
                 streaming
                     .PullMessagesFrom(from => from.EventHub("receivehub", "$Default", eventhubsnamespace, storageConnectionString, "leases"))
-                    .DeserializeMessagesWith(new JSonMessageSerializer())
+                    .DeserializeMessagesWith(new JsonTypeMessageSerializer(typeof(SensorValueChanged)))
                     .EnableReactiveProcessing(processing =>
                     {
                         processing.InterpretMessagesUsing<AverageSensorValuesByDevice>();
@@ -29,14 +30,14 @@ IHost host = Host.CreateDefaultBuilder(args)
                     })
                     .EnableBufferedDispatching(dispatching =>
                     {
-                        dispatching.SerializeMessagesWith(new JSonMessageSerializer());
+                        dispatching.SerializeMessagesWith(new JsonUntypedMessageSerializer());
                         dispatching.RouteMessages(to => to.EventHub("sendhub", eventhubsnamespace));
                     });
             });
 
             runtimeConfiguration.BufferedDispatchingPipeline(dispatching =>
             {
-                dispatching.SerializeMessagesWith(new JSonMessageSerializer());
+                dispatching.SerializeMessagesWith(new JsonTypeMessageSerializer(typeof(SensorValueChanged)));
                 dispatching.RouteMessages(to => to.EventHub("receivehub", eventhubsnamespace));
             });
         });
